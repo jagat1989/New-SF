@@ -1,18 +1,17 @@
 import { PrismaClient } from '@prisma/client'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BULLETPROOF .env loader — tries every possible location
+// BULLETPROOF .env loader — tries every possible location.
 // Next.js standalone server.js does NOT auto-load .env files. This ensures
 // DATABASE_URL is available no matter how the app is started or where it runs.
 // ─────────────────────────────────────────────────────────────────────────────
 function loadEnvFile() {
-  if (process.env.DATABASE_URL) return // already set (e.g. by hosting platform)
+  if (process.env.DATABASE_URL) return // already set (e.g. by Render/Vercel dashboard)
 
   try {
     const { readFileSync, existsSync } = require('fs')
     const { resolve } = require('path')
 
-    // Collect every plausible .env location
     const candidates = new Set<string>([
       resolve(process.cwd(), '.env'),
       resolve(process.cwd(), '../.env'),
@@ -20,21 +19,18 @@ function loadEnvFile() {
       resolve(process.cwd(), '../../../.env'),
     ])
 
-    // __dirname-based paths (works inside .next/standalone bundles)
     try {
       candidates.add(resolve(__dirname, '.env'))
       candidates.add(resolve(__dirname, '../.env'))
       candidates.add(resolve(__dirname, '../../.env'))
       candidates.add(resolve(__dirname, '../../../.env'))
       candidates.add(resolve(__dirname, '../../../../.env'))
-      candidates.add(resolve(__dirname, '../../../../../.env'))
     } catch {}
 
-    // Common absolute paths on VPS deploys
     const absPaths = [
       '/var/www/special-fare/.env',
       '/var/www/special-fare/.next/standalone/.env',
-      '/app/.env',           // Render/Railway container default
+      '/app/.env',
       '/opt/app/.env',
       '/home/app/.env',
     ]
@@ -53,20 +49,24 @@ function loadEnvFile() {
           }
           // eslint-disable-next-line no-console
           console.log(`[db] loaded .env from ${p}`)
-          return // success
+          return
         }
-      } catch {
-        // try next candidate
-      }
+      } catch {}
     }
     // eslint-disable-next-line no-console
-    console.warn('[db] WARNING: no .env file found in any location. DATABASE_URL is missing.')
-  } catch {
-    // ignore
-  }
+    console.warn('[db] WARNING: no .env file found. DATABASE_URL must be set by the hosting platform.')
+  } catch {}
 }
 
 loadEnvFile()
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Create PrismaClient with an EXPLICIT datasourceUrl.
+// This bypasses Prisma's env("DATABASE_URL") validation entirely — we pass
+// the URL directly at runtime. Works even if the schema's env() lookup fails
+// during `next build` (common on Render where env vars are runtime-only).
+// ─────────────────────────────────────────────────────────────────────────────
+const datasourceUrl = process.env.DATABASE_URL || process.env.DATABASE_URL_NON_POOLING
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -74,6 +74,9 @@ const globalForPrisma = globalThis as unknown as {
 
 export const db =
   globalForPrisma.prisma ??
-  new PrismaClient()
+  new PrismaClient({
+    ...(datasourceUrl ? { datasourceUrl } : {}),
+    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+  })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db

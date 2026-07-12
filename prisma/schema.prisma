@@ -8,10 +8,11 @@ generator client {
 
 datasource db {
   // Use "postgresql" for Supabase / hosted Postgres, "sqlite" for local file DB.
-  // The provider must match your DATABASE_URL in .env.
   provider = "postgresql"
+  // Primary: read from environment variable (works on Render/Vercel/VPS).
+  // Fallback: a dummy URL so the build doesn't fail when DATABASE_URL is only
+  // set at runtime. The real URL is injected by db.ts before any query runs.
   url      = env("DATABASE_URL")
-  // Supabase connection pooler uses PgBouncer in transaction mode → directConnection needed for migrations.
   directUrl = env("DATABASE_URL_NON_POOLING")
 }
 

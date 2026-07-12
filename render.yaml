@@ -1,0 +1,39 @@
+# Render Blueprint for Special Fare
+# This file auto-configures the web service on Render.
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: special-fare
+    runtime: node
+    plan: free
+    # Pull from your GitHub repo
+    repo: https://github.com/jagat1989/New-SF.git
+    branch: main
+    # Build: install deps, generate Prisma client, build Next.js
+    buildCommand: npm install && npx prisma generate && npm run build
+    # Start: run the standalone Next.js server
+    startCommand: node .next/standalone/server.js
+    healthCheckPath: /api/db-check
+    autoDeploy: true
+    envVars:
+      # Database (Supabase PostgreSQL)
+      - key: DATABASE_URL
+        sync: false  # set manually in Render dashboard
+      - key: DATABASE_URL_NON_POOLING
+        sync: false
+      # Session secret — generate with: openssl rand -hex 32
+      - key: SESSION_SECRET
+        sync: false
+      - key: NODE_ENV
+        value: production
+      # Admin account (used by seed script)
+      - key: ADMIN_EMAIL
+        value: specialfare21@gmail.com
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_NAME
+        value: Special Fare Admin
+      # Render sets PORT automatically — the app reads it
+      - key: PORT
+        value: 3000
