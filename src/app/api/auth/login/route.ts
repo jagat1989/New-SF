@@ -20,8 +20,21 @@ export async function POST(req: NextRequest) {
       user = await db.user.findUnique({ where: { email } })
     } catch (dbErr: any) {
       console.error('[login] DB error:', dbErr?.message)
+      // Show the actual DATABASE_URL value (masked) so we can diagnose
+      const rawUrl = process.env.DATABASE_URL || '(empty)'
+      const maskedUrl = rawUrl.replace(/(:\/\/[^:]+:)[^@]+@/, '$1****@')
       return NextResponse.json(
-        { error: `Database connection error: ${dbErr?.message || 'cannot reach database'}. Check DATABASE_URL in .env.` },
+        {
+          error: `Database connection error: ${dbErr?.message || 'cannot reach database'}`,
+          debug: {
+            DATABASE_URL_masked: maskedUrl,
+            DATABASE_URL_length: rawUrl.length,
+            DATABASE_URL_starts_with: rawUrl.slice(0, 13),
+            DATABASE_URL_set: !!process.env.DATABASE_URL,
+            SESSION_SECRET_set: !!process.env.SESSION_SECRET,
+            NODE_ENV: process.env.NODE_ENV,
+          },
+        },
         { status: 500 },
       )
     }
