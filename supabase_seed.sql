@@ -1,36 +1,31 @@
--- Special Fare — seed data
--- Run this in Supabase → SQL Editor AFTER running supabase_schema.sql
--- Creates demo users (including the admin from .env), flights, departures, sample bookings.
---
--- ⚠️ EDIT THE ADMIN EMAIL/PASSWORD BELOW before running, or use scripts/seed.ts
---    which reads from .env. The password here is a scrypt hash placeholder —
---    replace it with a real hash from scripts/create-admin.ts, OR run the
---    TypeScript seed script instead (recommended).
+-- Special Fare — seed data with REAL working password hashes
+-- Run in Supabase → SQL Editor AFTER supabase_schema.sql
+-- Admin login:  specialfare21@gmail.com / Kairavi@123
+-- Demo login:   rahul@example.com / password123 (also supplier/agent accounts)
+-- These are real scrypt(salt, hash) values that work with the app's verifyPassword().
+
+-- Wipe existing data (safe to re-run)
+DELETE FROM "Payment";
+DELETE FROM "Booking";
+DELETE FROM "FixedDeparture";
+DELETE FROM "Flight";
+DELETE FROM "User";
 
 -- ============================================================
--- USERS (password123 for demo accounts — scrypt hash: salt:hash)
+-- USERS (real scrypt hashes — login WILL work)
 -- ============================================================
--- Demo password hash for "password123":
--- Generate the real one for your admin via: node -e "const{scryptSync,randomBytes}=require('crypto');const s=randomBytes(16).toString('hex');console.log(s+':'+scryptSync('YOUR_PASSWORD',s,64).toString('hex'))"
-
 INSERT INTO "User" ("id","email","passwordHash","name","role","phone","company","balance","commissionRate","active","createdAt","updatedAt") VALUES
-('admin_demo','admin@specialfare.com','7c8c1f9a3e5b4d6f8a2c0e4b6d8f0a2c:4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e','System Admin','ADMIN','+919900000001',NULL,0,0,true,NOW(),NOW()),
-('supplier1','supplier@skywings.com','7c8c1f9a3e5b4d6f8a2c0e4b6d8f0a2c:4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e','SkyWings Airlines','SUPPLIER','+919900000002','SkyWings Airlines',500000,0,true,NOW(),NOW()),
-('supplier2','ops@nimbusair.com','7c8c1f9a3e5b4d6f8a2c0e4b6d8f0a2c:4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e','Nimbus Air','SUPPLIER','+919900000003','Nimbus Air',320000,0,true,NOW(),NOW()),
-('agent1','agent@flymart.com','7c8c1f9a3e5b4d6f8a2c0e4b6d8f0a2c:4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e','FlyMart Travels','AGENT','+919900000004','FlyMart Travels',25000,8,true,NOW(),NOW()),
-('agent2','agent@globetrotter.com','7c8c1f9a3e5b4d6f8a2c0e4b6d8f0a2c:4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e','GlobeTrotter Agency','AGENT','+919900000005','GlobeTrotter Agency',18000,6,true,NOW(),NOW()),
-('customer1','rahul@example.com','7c8c1f9a3e5b4d6f8a2c0e4b6d8f0a2c:4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e','Rahul Sharma','CUSTOMER','+919900000006',NULL,5000,0,true,NOW(),NOW()),
-('customer2','priya@example.com','7c8c1f9a3e5b4d6f8a2c0e4b6d8f0a2c:4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e','Priya Patel','CUSTOMER','+919900000007',NULL,0,0,true,NOW(),NOW());
-
--- NOTE: The passwordHash above is a PLACEHOLDER, not a valid hash.
--- To create a working admin, do ONE of:
---   (a) Run `npx tsx scripts/seed.ts` on a machine with DB access, OR
---   (b) Run `npx tsx scripts/create-admin.ts` on a machine with DB access, OR
---   (c) Register via the app's login screen, then in Supabase SQL Editor run:
---       UPDATE "User" SET role = 'ADMIN' WHERE email = 'your-email@example.com';
+('admin_real','specialfare21@gmail.com','a23276b8f3ab4dc8e14e9218dd3ba8cd:20bee224536d42aa73c6d4566731f2f57ea0491535c37241ca7cf3557057ed81e8c5eb44a24878a3049695a6fddd6652bf5bf3637f119be9b2a4868b829f3922','Special Fare Admin','ADMIN',NULL,NULL,0,0,true,NOW(),NOW()),
+('admin_demo','admin@specialfare.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','System Admin','ADMIN','+919900000001',NULL,0,0,true,NOW(),NOW()),
+('supplier1','supplier@skywings.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','SkyWings Airlines','SUPPLIER','+919900000002','SkyWings Airlines',500000,0,true,NOW(),NOW()),
+('supplier2','ops@nimbusair.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','Nimbus Air','SUPPLIER','+919900000003','Nimbus Air',320000,0,true,NOW(),NOW()),
+('agent1','agent@flymart.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','FlyMart Travels','AGENT','+919900000004','FlyMart Travels',25000,8,true,NOW(),NOW()),
+('agent2','agent@globetrotter.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','GlobeTrotter Agency','AGENT','+919900000005','GlobeTrotter Agency',18000,6,true,NOW(),NOW()),
+('customer1','rahul@example.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','Rahul Sharma','CUSTOMER','+919900000006',NULL,5000,0,true,NOW(),NOW()),
+('customer2','priya@example.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','Priya Patel','CUSTOMER','+919900000007',NULL,0,0,true,NOW(),NOW());
 
 -- ============================================================
--- FLIGHTS (pre-purchase inventory)
+-- FLIGHTS
 -- ============================================================
 INSERT INTO "Flight" ("id","flightNumber","airline","airlineCode","origin","originCity","destination","destinationCity","departureTime","arrivalTime","durationMins","aircraft","totalSeats","basePrice","cabinClass","baggage","supplierId","status","createdAt","updatedAt") VALUES
 ('fl1','SW 101','SkyWings Airlines','SW','DEL','New Delhi','BOM','Mumbai','06:00','08:15',135,'A320',180,4500,'ECONOMY','20kg checked + 7kg cabin','supplier1','ACTIVE',NOW(),NOW()),
@@ -51,7 +46,7 @@ INSERT INTO "Flight" ("id","flightNumber","airline","airlineCode","origin","orig
 ('fl16','NA 333','Nimbus Air','NA','IXB','Bagdogra','CCU','Kolkata','11:30','12:35',65,'A319',140,2900,'ECONOMY','20kg checked + 7kg cabin','supplier2','ACTIVE',NOW(),NOW());
 
 -- ============================================================
--- FIXED DEPARTURES (next 1-9 days)
+-- FIXED DEPARTURES
 -- ============================================================
 INSERT INTO "FixedDeparture" ("id","flightId","departureDate","availableSeats","bookedSeats","costPrice","sellingPrice","markup","status","supplierId","createdAt","updatedAt") VALUES
 ('fd1','fl1',date_trunc('day', NOW() + interval '1 day'),40,6,4000,4699,699,'OPEN','supplier1',NOW(),NOW()),
@@ -94,8 +89,8 @@ INSERT INTO "Booking" ("id","reference","flightId","fixedDepartureId","userId","
 ('bk5','SF1004','fl1','fd2','customer1','CUSTOMER','Primary Passenger','passenger@example.com','+919900012345','ADULT',2,4899,9798,0,'CONFIRMED','PAID',NOW(),NOW());
 
 INSERT INTO "Payment" ("id","bookingId","userId","amount","method","status","qrPayload","transactionId","createdAt","updatedAt") VALUES
-('pm1','bk1','customer1',4699,'QR_SCAN','PAID','upi://pay?pa=specialfare@bank&pn=Special Fare&am=4699&tn=SF1000','TXN'||EXTRACT(EPOCH FROM NOW())::bigint||'1',NOW(),NOW()),
-('pm2','bk2','agent1',6798,'QR_SCAN','PAID','upi://pay?pa=specialfare@bank&pn=Special Fare&am=6798&tn=SF1001','TXN'||EXTRACT(EPOCH FROM NOW())::bigint||'2',NOW(),NOW()),
+('pm1','bk1','customer1',4699,'QR_SCAN','PAID','upi://pay?pa=specialfare@bank&pn=Special Fare&am=4699&tn=SF1000','TXN1',NOW(),NOW()),
+('pm2','bk2','agent1',6798,'QR_SCAN','PAID','upi://pay?pa=specialfare@bank&pn=Special Fare&am=6798&tn=SF1001','TXN2',NOW(),NOW()),
 ('pm3','bk3','customer2',3799,'QR_SCAN','PENDING','upi://pay?pa=specialfare@bank&pn=Special Fare&am=3799&tn=SF1002',NULL,NOW(),NOW()),
-('pm4','bk4','agent2',8997,'QR_SCAN','PAID','upi://pay?pa=specialfare@bank&pn=Special Fare&am=8997&tn=SF1003','TXN'||EXTRACT(EPOCH FROM NOW())::bigint||'4',NOW(),NOW()),
-('pm5','bk5','customer1',9798,'QR_SCAN','PAID','upi://pay?pa=specialfare@bank&pn=Special Fare&am=9798&tn=SF1004','TXN'||EXTRACT(EPOCH FROM NOW())::bigint||'5',NOW(),NOW());
+('pm4','bk4','agent2',8997,'QR_SCAN','PAID','upi://pay?pa=specialfare@bank&pn=Special Fare&am=8997&tn=SF1003','TXN4',NOW(),NOW()),
+('pm5','bk5','customer1',9798,'QR_SCAN','PAID','upi://pay?pa=specialfare@bank&pn=Special Fare&am=9798&tn=SF1004','TXN5',NOW(),NOW());
