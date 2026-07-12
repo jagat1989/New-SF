@@ -1,0 +1,133 @@
+// Special Fare - Flight Ticket Booking Platform schema
+// Multi-role: ADMIN, SUPPLIER, AGENT, CUSTOMER
+// Pre-purchase inventory + Extranet fixed departures + QR scan payment
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Use "postgresql" for Supabase / hosted Postgres, "sqlite" for local file DB.
+  // The provider must match your DATABASE_URL in .env.
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // Supabase connection pooler uses PgBouncer in transaction mode → directConnection needed for migrations.
+  directUrl = env("DATABASE_URL_NON_POOLING")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  passwordHash   String
+  name           String
+  role           String   @default("CUSTOMER") // ADMIN | SUPPLIER | AGENT | CUSTOMER
+  phone          String?
+  company        String?
+  balance        Float    @default(0)
+  commissionRate Float    @default(0) // agent commission percentage
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  flights         Flight[]         @relation("SupplierFlights")
+  fixedDepartures FixedDeparture[] @relation("SupplierDepartures")
+  bookings        Booking[]        @relation("UserBookings")
+  payments        Payment[]        @relation("UserPayments")
+}
+
+model Flight {
+  id             String   @id @default(cuid())
+  flightNumber   String
+  airline        String
+  airlineCode    String
+  origin         String
+  originCity     String
+  destination    String
+  destinationCity String
+  departureTime  String // HH:mm
+  arrivalTime    String // HH:mm
+  durationMins   Int
+  aircraft       String  @default("A320")
+  totalSeats     Int     @default(180)
+  basePrice      Float
+  cabinClass     String  @default("ECONOMY") // ECONOMY | BUSINESS | FIRST
+  baggage        String  @default("20kg checked + 7kg cabin")
+  supplierId     String
+  supplier       User     @relation("SupplierFlights", fields: [supplierId], references: [id])
+  status         String   @default("ACTIVE") // ACTIVE | SUSPENDED
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  fixedDepartures FixedDeparture[]
+  bookings        Booking[]
+}
+
+// Extranet fixed departures: pre-purchase inventory shown to customers/agents
+model FixedDeparture {
+  id             String   @id @default(cuid())
+  flightId       String
+  flight         Flight   @relation(fields: [flightId], references: [id])
+  departureDate  DateTime
+  availableSeats Int
+  bookedSeats    Int      @default(0)
+  costPrice      Float    // supplier cost
+  sellingPrice   Float    // listed price
+  markup         Float    @default(0)
+  status         String   @default("OPEN") // OPEN | CLOSED | SOLD_OUT
+  supplierId     String
+  supplier       User     @relation("SupplierDepartures", fields: [supplierId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  bookings Booking[]
+}
+
+model Booking {
+  id               String   @id @default(cuid())
+  reference        String   @unique
+  flightId         String
+  flight           Flight   @relation(fields: [flightId], references: [id])
+  fixedDepartureId String?
+  fixedDeparture   FixedDeparture? @relation(fields: [fixedDepartureId], references: [id])
+  userId           String
+  user             User     @relation("UserBookings", fields: [userId], references: [id])
+  bookedByRole     String   // CUSTOMER | AGENT | ADMIN
+  passengerName    String
+  passengerEmail   String
+  passengerPhone   String
+  passengerType    String   @default("ADULT") // ADULT | CHILD | INFANT
+  seats            Int      @default(1)
+  unitPrice        Float
+  totalAmount      Float
+  commission       Float    @default(0)
+  status           String   @default("CONFIRMED") // CONFIRMED | PENDING | CANCELLED
+  paymentStatus    String   @default("PENDING") // PENDING | PAID | FAILED | REFUNDED
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  payments Payment[]
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  bookingId     String
+  booking       Booking  @relation(fields: [bookingId], references: [id])
+  userId        String
+  user          User     @relation("UserPayments", fields: [userId], references: [id])
+  amount        Float
+  method        String   @default("QR_SCAN")
+  status        String   @default("PENDING") // PENDING | PAID | FAILED
+  qrPayload     String
+  transactionId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Platform-wide key/value configuration (payment gateway, email, WhatsApp, etc.)
+// Secrets are stored as-is locally; the GET API masks them before returning to the UI.
+model Setting {
+  key       String   @id
+  value     String
+  category  String   @default("general") // payment | email | whatsapp | general
+  updatedAt DateTime @updatedAt
+}
