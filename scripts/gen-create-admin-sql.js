@@ -18,20 +18,27 @@ if (!timingSafeEqual(a, b)) {
 }
 console.log('✓ Hash verified against "' + password + '"')
 
-const sql = `-- Create your admin account (specialfare21@gmail.com / Kairavi@123)
--- Paste this entire block into Supabase SQL Editor and click Run.
--- Safe to run multiple times — uses ON CONFLICT to update if exists.
--- The passwordHash below is a REAL scrypt hash — login WILL work.
+const sql = `-- Create or update your admin account (specialfare21@gmail.com / Kairavi@123)
+-- Handles every case without breaking foreign keys.
+-- The passwordHash below is a REAL scrypt hash — login WILL work after this.
 
+-- Step 1: If a row with this email already exists, just UPDATE its password + role.
+--         (UPDATE avoids the duplicate-email error AND preserves foreign keys.)
+UPDATE "User"
+SET "passwordHash" = '${pwHash}',
+    "role" = 'ADMIN',
+    "name" = 'Special Fare Admin',
+    "active" = true,
+    "updatedAt" = NOW()
+WHERE email = 'specialfare21@gmail.com';
+
+-- Step 2: If no row existed (the UPDATE above matched 0 rows), INSERT one.
+--         Only runs if the email isn't already taken.
 INSERT INTO "User" ("id", "email", "passwordHash", "name", "role", "active", "balance", "commissionRate", "createdAt", "updatedAt")
-VALUES ('admin1', 'specialfare21@gmail.com', '${pwHash}', 'Special Fare Admin', 'ADMIN', true, 0, 0, NOW(), NOW())
-ON CONFLICT ("id") DO UPDATE SET
-  "passwordHash" = EXCLUDED."passwordHash",
-  "role" = 'ADMIN',
-  "active" = true,
-  "updatedAt" = NOW();
+SELECT 'admin1', 'specialfare21@gmail.com', '${pwHash}', 'Special Fare Admin', 'ADMIN', true, 0, 0, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "User" WHERE email = 'specialfare21@gmail.com');
 
--- Show the result (should say password_status = OK):
+-- Show the result (should say password_status = OK and hash_length = 161):
 SELECT email, role, active, LENGTH("passwordHash") AS hash_length, CASE WHEN "passwordHash" IS NULL OR "passwordHash" = '' THEN 'BROKEN — empty hash' ELSE 'OK — ready to login' END AS password_status FROM "User" WHERE email = 'specialfare21@gmail.com';
 `
 
