@@ -17,7 +17,22 @@ export async function GET() {
   out.DATABASE_URL_NON_POOLING_set = !!process.env.DATABASE_URL_NON_POOLING
   out.NODE_ENV = process.env.NODE_ENV
 
-  // 2. Can we connect + query?
+  // 2. Which .env files exist? (helps diagnose the "env not found" issue)
+  try {
+    const { existsSync } = require('fs')
+    const { resolve } = require('path')
+    const candidates = [
+      resolve(process.cwd(), '.env'),
+      resolve(process.cwd(), '../.env'),
+      resolve(process.cwd(), '../../.env'),
+      resolve(__dirname, '.env'),
+      resolve(__dirname, '../.env'),
+      resolve(__dirname, '../../.env'),
+    ]
+    out.env_files = candidates.map((p: string) => ({ path: p, exists: existsSync(p) }))
+  } catch {}
+
+  // 3. Can we connect + query?
   try {
     const userCount = await db.user.count()
     out.db_connected = true
