@@ -77,3 +77,5 @@ mini-services
 Caddyfile
 scripts/verify-db.ts
 scripts/gen-seed-sql.js
+scripts/gen-create-admin-sql.js
+scripts/gen-seed-sql.js
