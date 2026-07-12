@@ -4,25 +4,21 @@
 -- Demo login:   rahul@example.com / password123 (also supplier/agent accounts)
 -- These are real scrypt(salt, hash) values that work with the app's verifyPassword().
 
--- Wipe existing data (safe to re-run)
-DELETE FROM "Payment";
-DELETE FROM "Booking";
-DELETE FROM "FixedDeparture";
-DELETE FROM "Flight";
-DELETE FROM "User";
+-- Wipe ALL existing data (CASCADE handles foreign-key constraints, so order doesn't matter)
+TRUNCATE TABLE "Payment", "Booking", "FixedDeparture", "Flight", "User", "Setting" RESTART IDENTITY CASCADE;
 
 -- ============================================================
 -- USERS (real scrypt hashes — login WILL work)
 -- ============================================================
 INSERT INTO "User" ("id","email","passwordHash","name","role","phone","company","balance","commissionRate","active","createdAt","updatedAt") VALUES
-('admin_real','specialfare21@gmail.com','a23276b8f3ab4dc8e14e9218dd3ba8cd:20bee224536d42aa73c6d4566731f2f57ea0491535c37241ca7cf3557057ed81e8c5eb44a24878a3049695a6fddd6652bf5bf3637f119be9b2a4868b829f3922','Special Fare Admin','ADMIN',NULL,NULL,0,0,true,NOW(),NOW()),
-('admin_demo','admin@specialfare.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','System Admin','ADMIN','+919900000001',NULL,0,0,true,NOW(),NOW()),
-('supplier1','supplier@skywings.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','SkyWings Airlines','SUPPLIER','+919900000002','SkyWings Airlines',500000,0,true,NOW(),NOW()),
-('supplier2','ops@nimbusair.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','Nimbus Air','SUPPLIER','+919900000003','Nimbus Air',320000,0,true,NOW(),NOW()),
-('agent1','agent@flymart.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','FlyMart Travels','AGENT','+919900000004','FlyMart Travels',25000,8,true,NOW(),NOW()),
-('agent2','agent@globetrotter.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','GlobeTrotter Agency','AGENT','+919900000005','GlobeTrotter Agency',18000,6,true,NOW(),NOW()),
-('customer1','rahul@example.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','Rahul Sharma','CUSTOMER','+919900000006',NULL,5000,0,true,NOW(),NOW()),
-('customer2','priya@example.com','d10416bf4d0f8ebb2a2ef4c6896f6d29:85f8d0ac7374c2378cd2418a80921b02df925425a73d9b57d304f1d031c48c2f6ea1c48afeb20469aa784b782f9d7c92532dc774148b57d5dc9441d9f4a349c8','Priya Patel','CUSTOMER','+919900000007',NULL,0,0,true,NOW(),NOW());
+('admin_real','specialfare21@gmail.com','ccc8c42cb6047bc384cbc3acd3fb5892:7c474fe6c0c164c7756af370e4963cc536d1ad5fe4afd71bb7bd15d61983274bf684716c1528d32cb94e5f1a7de010785f7fd6c465c50d1e5c1ded842aee6764','Special Fare Admin','ADMIN',NULL,NULL,0,0,true,NOW(),NOW()),
+('admin_demo','admin@specialfare.com','f357bd7f813a87d6bea5b488ae1960bd:b091de8e3c9c56377d570a13f9cf3ee4c0b0f8f5bdb7cb6a19dc553a68bf8fb24b81e9903b9c82734d8b67663861106412ffceb4be0c3b6d92e73e069573596a','System Admin','ADMIN','+919900000001',NULL,0,0,true,NOW(),NOW()),
+('supplier1','supplier@skywings.com','f357bd7f813a87d6bea5b488ae1960bd:b091de8e3c9c56377d570a13f9cf3ee4c0b0f8f5bdb7cb6a19dc553a68bf8fb24b81e9903b9c82734d8b67663861106412ffceb4be0c3b6d92e73e069573596a','SkyWings Airlines','SUPPLIER','+919900000002','SkyWings Airlines',500000,0,true,NOW(),NOW()),
+('supplier2','ops@nimbusair.com','f357bd7f813a87d6bea5b488ae1960bd:b091de8e3c9c56377d570a13f9cf3ee4c0b0f8f5bdb7cb6a19dc553a68bf8fb24b81e9903b9c82734d8b67663861106412ffceb4be0c3b6d92e73e069573596a','Nimbus Air','SUPPLIER','+919900000003','Nimbus Air',320000,0,true,NOW(),NOW()),
+('agent1','agent@flymart.com','f357bd7f813a87d6bea5b488ae1960bd:b091de8e3c9c56377d570a13f9cf3ee4c0b0f8f5bdb7cb6a19dc553a68bf8fb24b81e9903b9c82734d8b67663861106412ffceb4be0c3b6d92e73e069573596a','FlyMart Travels','AGENT','+919900000004','FlyMart Travels',25000,8,true,NOW(),NOW()),
+('agent2','agent@globetrotter.com','f357bd7f813a87d6bea5b488ae1960bd:b091de8e3c9c56377d570a13f9cf3ee4c0b0f8f5bdb7cb6a19dc553a68bf8fb24b81e9903b9c82734d8b67663861106412ffceb4be0c3b6d92e73e069573596a','GlobeTrotter Agency','AGENT','+919900000005','GlobeTrotter Agency',18000,6,true,NOW(),NOW()),
+('customer1','rahul@example.com','f357bd7f813a87d6bea5b488ae1960bd:b091de8e3c9c56377d570a13f9cf3ee4c0b0f8f5bdb7cb6a19dc553a68bf8fb24b81e9903b9c82734d8b67663861106412ffceb4be0c3b6d92e73e069573596a','Rahul Sharma','CUSTOMER','+919900000006',NULL,5000,0,true,NOW(),NOW()),
+('customer2','priya@example.com','f357bd7f813a87d6bea5b488ae1960bd:b091de8e3c9c56377d570a13f9cf3ee4c0b0f8f5bdb7cb6a19dc553a68bf8fb24b81e9903b9c82734d8b67663861106412ffceb4be0c3b6d92e73e069573596a','Priya Patel','CUSTOMER','+919900000007',NULL,0,0,true,NOW(),NOW());
 
 -- ============================================================
 -- FLIGHTS
