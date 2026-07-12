@@ -76,3 +76,4 @@ examples
 mini-services
 Caddyfile
 scripts/verify-db.ts
+scripts/gen-seed-sql.js
