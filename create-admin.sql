@@ -1,15 +1,22 @@
--- Create your admin account (specialfare21@gmail.com / Kairavi@123)
--- Paste this entire block into Supabase SQL Editor and click Run.
--- Safe to run multiple times — uses ON CONFLICT to update if exists.
--- The passwordHash below is a REAL scrypt hash — login WILL work.
+-- Create or update your admin account (specialfare21@gmail.com / Kairavi@123)
+-- Handles every case without breaking foreign keys.
+-- The passwordHash below is a REAL scrypt hash — login WILL work after this.
 
+-- Step 1: If a row with this email already exists, just UPDATE its password + role.
+--         (UPDATE avoids the duplicate-email error AND preserves foreign keys.)
+UPDATE "User"
+SET "passwordHash" = '71ce3355f361da30d00b1fb3f80ad9a0:983ef6f67d7317c063dffaffe38738cd665f0983d0f537e7b824bb66626a8a75099075f09432b46ea4106e9c81dc57f47c431bef1fbb775404b4498725c2a3a5',
+    "role" = 'ADMIN',
+    "name" = 'Special Fare Admin',
+    "active" = true,
+    "updatedAt" = NOW()
+WHERE email = 'specialfare21@gmail.com';
+
+-- Step 2: If no row existed (the UPDATE above matched 0 rows), INSERT one.
+--         Only runs if the email isn't already taken.
 INSERT INTO "User" ("id", "email", "passwordHash", "name", "role", "active", "balance", "commissionRate", "createdAt", "updatedAt")
-VALUES ('admin1', 'specialfare21@gmail.com', 'f0e55d264c4ab429a3d6cb43aca77df1:359615da36314a9f21f1b054cda4c5a2a57dc4ad7290effdec54f5ad8b8b94d33a7bd6a3e2a1b5a877f6f394889cf934de7d441fdfdf93c8d710ba9c8e0345e7', 'Special Fare Admin', 'ADMIN', true, 0, 0, NOW(), NOW())
-ON CONFLICT ("id") DO UPDATE SET
-  "passwordHash" = EXCLUDED."passwordHash",
-  "role" = 'ADMIN',
-  "active" = true,
-  "updatedAt" = NOW();
+SELECT 'admin1', 'specialfare21@gmail.com', '71ce3355f361da30d00b1fb3f80ad9a0:983ef6f67d7317c063dffaffe38738cd665f0983d0f537e7b824bb66626a8a75099075f09432b46ea4106e9c81dc57f47c431bef1fbb775404b4498725c2a3a5', 'Special Fare Admin', 'ADMIN', true, 0, 0, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM "User" WHERE email = 'specialfare21@gmail.com');
 
--- Show the result (should say password_status = OK):
+-- Show the result (should say password_status = OK and hash_length = 161):
 SELECT email, role, active, LENGTH("passwordHash") AS hash_length, CASE WHEN "passwordHash" IS NULL OR "passwordHash" = '' THEN 'BROKEN — empty hash' ELSE 'OK — ready to login' END AS password_status FROM "User" WHERE email = 'specialfare21@gmail.com';
