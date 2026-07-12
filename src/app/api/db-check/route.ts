@@ -9,13 +9,16 @@ export const runtime = 'nodejs'
 export async function GET() {
   const out: Record<string, any> = {}
 
+  // 0. Where is the app running from? (critical for finding .env)
+  out.process_cwd = process.cwd()
+  out.node_env = process.env.NODE_ENV
+  try { out.__dirname = __dirname } catch { out.__dirname = '(unavailable)' }
+
   // 1. What DATABASE_URL is the app using? (mask the password)
   const dbUrl = process.env.DATABASE_URL || '(not set)'
   const masked = dbUrl.replace(/(:\/\/[^:]+:)[^@]+@/, '$1****@')
   out.DATABASE_URL_masked = masked
   out.DATABASE_URL_set = !!process.env.DATABASE_URL
-  out.DATABASE_URL_NON_POOLING_set = !!process.env.DATABASE_URL_NON_POOLING
-  out.NODE_ENV = process.env.NODE_ENV
 
   // 2. Which .env files exist? (helps diagnose the "env not found" issue)
   try {
@@ -25,9 +28,9 @@ export async function GET() {
       resolve(process.cwd(), '.env'),
       resolve(process.cwd(), '../.env'),
       resolve(process.cwd(), '../../.env'),
-      resolve(__dirname, '.env'),
-      resolve(__dirname, '../.env'),
-      resolve(__dirname, '../../.env'),
+      '/var/www/special-fare/.env',
+      '/var/www/special-fare/.next/standalone/.env',
+      '/app/.env',
     ]
     out.env_files = candidates.map((p: string) => ({ path: p, exists: existsSync(p) }))
   } catch {}
